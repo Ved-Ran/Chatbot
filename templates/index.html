@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #2A2A72 0%, #009FFD 100%);
+            font-family: 'Roboto', sans-serif;
+            color: white;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .btn {
+            background-color: #2a0888;
+            color: white;
+            font-size: 18px;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #f70000;
+        }
+        .form-control {
+            font-size: 16px;
+            padding: 6px;
+        }
+        .form-control {
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 3.5rem;
+            color: #d3cefc;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        .image-slider {
+            position: absolute;
+            left: 150px;
+            top: 55%;
+            transform: translateY(-50%);
+            width: 350px;
+            height: 350px;
+            border: 5px solid rgb(167, 145, 196);
+            overflow: hidden;
+            text-align: center;
+        }
+        .image-slider img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .robot-image {
+            position: absolute;
+            left: 53%;
+            top: 6%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: auto;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="image-slider">
+        <img src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Slika 1" id="slider-image">
+    </div>
+    
+    <div class="container mt-5">
+        <h1 class="text-center">Chatbot</h1>
+        <div class="form-group">
+            <select class="form-control" id="question" onclick="updateQuestions()" onchange="setTextInput()">
+                <option value="">Odaberite pitanje ili upišite...</option>
+            </select>
+            <input type="text" class="form-control mt-2" id="text-input" placeholder="Napiši pitanje...">
+        </div>
+        <button id="ask" class="btn btn-primary btn-block">Pitaj</button>
+        <div class="mt-4">
+            <h5>Odgovor:</h5>
+            <div id="response" class="alert alert-secondary" style="min-height: 50px;"></div>
+        </div>
+        
+        <!-- slika robota -->
+        <img src="{{ url_for('static', filename='images/robo.png') }}" alt="Robot" class="robot-image">
+
+        <audio id="audio" controls style="display: none;">
+            <source id="audio-source" src="" type="audio/mp3">
+            Vaš preglednik ne podržava audio element.
+        </audio>
+    </div>
+
+    <script>
+        const questions = [
+            "Gdje se nalazi Lipik?",
+            "Po čemu je Lipik najpoznatiji?",
+            "Koje su prirodne atrakcije Lipika?",
+            "Koje su najpoznatije manifestacije u Lipiku?",
+            "Koji je gospodarski značaj Lipika?",
+            "Koje su aktivnosti dostupne turistima?",
+            "Kada su nastale prve terme u Lipiku?",
+            "Koliko stanovnika ima Lipik?",
+            "Koja vrsta turizma je najrazvijenija u Lipiku?",
+            "Koji povijesni spomenici se mogu posjetiti u Lipiku?",
+            "Koji je najpoznatiji kulturni događaj u Lipiku?",
+            "Kako Lipik doprinosi zdravlju posjetitelja?",
+            "Koji su simboli Lipika?",
+            "Kada je Lipik dobio status grada?",
+            "Kakva je klima u Lipiku?",
+
+            "Što je Lipik AI centar?",
+            "Koje tehnologije se koriste u obuci?",
+            "Kako se financira sudjelovanje u programima Lipik AI centra?",
+            "Koji je cilj Lipik AI centra?",
+            "Koliko traje osposobljavanje u Lipik AI centru?",
+            "Tko se može prijaviti na program?",
+            "Koje su prednosti završetka osposobljavanja?"
+        ];
+
+        // Funkcija za izmjenu slika
+        let currentImageIndex = 0;
+        const images = [
+            "{{ url_for('static', filename='images/image1.jpg') }}", 
+            "{{ url_for('static', filename='images/image2.jpg') }}", 
+            "{{ url_for('static', filename='images/image3.jpg') }}",
+            "{{ url_for('static', filename='images/image4.jpg') }}",
+            "{{ url_for('static', filename='images/image5.jpg') }}",
+            "{{ url_for('static', filename='images/image6.jpg') }}"
+        ];
+
+        function changeImage() {
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+            document.getElementById('slider-image').src = images[currentImageIndex];
+        }
+
+        setInterval(changeImage, 5000);
+
+        function getRandomQuestions() {
+            const shuffled = questions.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 5);
+        }
+
+        function updateQuestions() {
+            $('#question').empty().append('<option value="">Odaberi pitanje</option>');
+            const randomQuestions = getRandomQuestions();
+            randomQuestions.forEach(q => {
+                $('#question').append(`<option value="${q}">${q}</option>`);
+            });
+        }
+
+        function setTextInput() {
+            const selectedQuestion = $('#question').val();
+            $('#text-input').val(selectedQuestion);
+        }
+
+        $(document).ready(function(){
+            updateQuestions();
+
+            $('#ask').click(function(){
+                var question = $('#text-input').val() || $('#question').val();
+                $.post('/ask', { question: question }, function(data) {
+                    $('#response').text(data.response);
+                    if (data.response) {
+                        $('#audio-source').attr('src', 'static/response.mp3?v=' + new Date().getTime());
+                        $('#audio')[0].load();
+                        $('#audio')[0].play();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
